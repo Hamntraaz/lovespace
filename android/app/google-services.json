@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "429750940322",
+    "project_id": "love-space231223",
+    "storage_bucket": "love-space231223.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:429750940322:android:78e13702945a14483e9dfb",
+        "android_client_info": {
+          "package_name": "com.maha.lovespace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHlWCE-2OGR_m5gZEQh_JW6j4WR_QNze0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
