@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChangeEmailPage extends StatefulWidget {
   const ChangeEmailPage({super.key});
@@ -8,64 +9,72 @@ class ChangeEmailPage extends StatefulWidget {
 }
 
 class _ChangeEmailPageState extends State<ChangeEmailPage> {
-  bool _codeSent = false;
-  final _emailController = TextEditingController();
-  final _otpController = TextEditingController();
+  final _oldPasswordController = TextEditingController();
+  final _newEmailController = TextEditingController();
+  bool _isLoading = false;
 
-  void _handleSendCode() {
-    if (_emailController.text.contains('@')) {
-      setState(() => _codeSent = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Kode verifikasi telah dikirim ke email baru!")),
+  Future<void> _updateEmail() async {
+    if (!_newEmailController.text.contains('@')) {
+      _showSnackBar("Format email baru tidak valid!");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      // 1. Re-authenticate (Wajib agar Firebase mengizinkan ganti email)
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user?.email ?? "",
+        password: _oldPasswordController.text,
       );
+      await user?.reauthenticateWithCredential(credential);
+
+      // 2. Kirim email verifikasi ke alamat baru
+      // Setelah user klik link di email baru, email di Firebase otomatis berubah
+      await user?.verifyBeforeUpdateEmail(_newEmailController.text.trim());
+
+      if (mounted) {
+        _showSnackBar("Link verifikasi dikirim ke ${_newEmailController.text}. Silakan cek inbox/spam!");
+        Navigator.pop(context);
+      }
+    } on FirebaseAuthException catch (e) {
+      _showSnackBar(e.message ?? "Gagal memperbarui email");
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
+
+  void _showSnackBar(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF0F3),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.pinkAccent),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text("Ganti Email", style: TextStyle(color: Colors.pink[800], fontWeight: FontWeight.bold)),
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Padding(
         padding: const EdgeInsets.all(25),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _codeSent ? "Masukkan Kode Verifikasi" : "Email Baru",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text("Ganti Email Utama", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.pinkAccent)),
             const SizedBox(height: 10),
-            Text(
-              _codeSent
-                  ? "Kami telah mengirimkan 6 digit kode ke ${_emailController.text}"
-                  : "Masukkan alamat email baru kamu. Kami akan mengirimkan kode verifikasi.",
-              style: const TextStyle(color: Colors.grey),
-            ),
+            const Text("Demi keamanan, konfirmasi password kamu untuk mengganti email.", style: TextStyle(color: Colors.grey, fontSize: 13)),
             const SizedBox(height: 30),
-            _codeSent
-                ? _buildInput("Kode OTP", Icons.vibration, _otpController, isOtp: true)
-                : _buildInput("Email Baru", Icons.email_outlined, _emailController),
+            _buildInput("Password Saat Ini", Icons.lock_outline, _oldPasswordController, true),
+            const SizedBox(height: 15),
+            _buildInput("Email Baru", Icons.alternate_email, _newEmailController, false),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: _codeSent ? () => Navigator.pop(context) : _handleSendCode,
+              onPressed: _isLoading ? null : _updateEmail,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pinkAccent,
                 minimumSize: const Size(double.infinity, 55),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
-              child: Text(
-                _codeSent ? "Verifikasi & Simpan" : "Kirim Kode",
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Kirim Link Verifikasi", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -73,21 +82,15 @@ class _ChangeEmailPageState extends State<ChangeEmailPage> {
     );
   }
 
-  Widget _buildInput(String hint, IconData icon, TextEditingController controller, {bool isOtp = false}) {
+  Widget _buildInput(String hint, IconData icon, TextEditingController controller, bool isPass) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.pink.withOpacity(0.05), blurRadius: 10)],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
       child: TextField(
         controller: controller,
-        keyboardType: isOtp ? TextInputType.number : TextInputType.emailAddress,
-        textAlign: isOtp ? TextAlign.center : TextAlign.start,
-        style: TextStyle(letterSpacing: isOtp ? 10 : 1),
+        obscureText: isPass,
         decoration: InputDecoration(
           hintText: hint,
-          prefixIcon: isOtp ? null : Icon(icon, color: Colors.pinkAccent),
+          prefixIcon: Icon(icon, color: Colors.pinkAccent),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.all(18),
         ),
