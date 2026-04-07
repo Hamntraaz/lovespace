@@ -1,7 +1,3 @@
-Ini dia draft **README.md** yang keren dan profesional buat proyek **Love Space** kamu. Deskripsinya sudah saya sesuaikan dengan fitur-fitur yang kita buat tadi (Informatics Engineering style banget!).
-
----
-
 # ❤️ Love Space
 
 **Love Space** adalah aplikasi *private dashboard* dan chat eksklusif yang dirancang khusus untuk pasangan. Aplikasi ini memungkinkan dua pengguna untuk terhubung dalam satu "ruang digital" pribadi untuk berbagi pesan, momen, dan memantau hari jadi (*anniversary*).
