@@ -70,11 +70,3 @@ Proyek ini masih dalam tahap pengembangan aktif oleh mahasiswa **Informatika**. 
 ---
 
 > **"Hubungkan hatimu dengan si dia, dalam ruang digital yang pribadi."** ❤️
-
----
-
-### Cara Pakai:
-1. Salin teks di atas.
-2. Buka file `README.md` di root folder proyek kamu.
-3. Hapus isinya, lalu *paste* kode di atas.
-4. Simpan dan *push* ke GitHub kamu!
